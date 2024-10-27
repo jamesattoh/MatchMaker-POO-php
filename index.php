@@ -1,46 +1,54 @@
 <?php
 
-    const RESULT_WINNER = 1;
-    const RESULT_LOSER = -1;
-    const RESULT_DRAW = 0;
-    const RESULT_POSSIBILITIES = [RESULT_WINNER, RESULT_LOSER, RESULT_DRAW];
 
-    class Encounter
+
+class Encounter
+{   
+    public const RESULT_WINNER = 1;
+    public const RESULT_LOSER = -1;
+    public const RESULT_DRAW = 0;
+    public const RESULT_POSSIBILITIES = [self::RESULT_WINNER, self::RESULT_LOSER, self::RESULT_DRAW]; //to use a static element of a class in that class, we use self::
+
+    public static function probabilityAgainst(Player $playerOne, Player $playerTwo): float
     {
-        public function probabilityAgainst(int $levelPlayerOne, int $againstLevelPlayerTwo): float
-        {
-            return 1/(1+(10 ** (($againstLevelPlayerTwo - $levelPlayerOne)/400)));
-        }
-
-        public function setNewLevel(int &$levelPlayerOne, int $againstLevelPlayerTwo, int $playerOneResult)
-        {
-            if (!in_array($playerOneResult, RESULT_POSSIBILITIES)) {
-                trigger_error(sprintf('Invalid result. Expected %s',implode(' or ', RESULT_POSSIBILITIES)));
-            }
-
-            $levelPlayerOne += (int) (32 * ($playerOneResult - $this->probabilityAgainst($levelPlayerOne, $againstLevelPlayerTwo)));
-        }
-
+        return 1/(1+(10 ** (($playerTwo->level - $playerOne->level)/400)));
     }
 
-    $greg = 400;
-    $jade = 800;
+    public static function setNewLevel(Player $playerOne, Player $playerTwo, int $playerOneResult): void
+    {
+        if (!in_array($playerOneResult, self::RESULT_POSSIBILITIES)) {
+            trigger_error(sprintf('Invalid result. Expected %s',implode(' or ', self::RESULT_POSSIBILITIES)));
+        }
 
-    $encounter = new Encounter;
+        $playerOne->level += round(32 * ($playerOneResult - self::probabilityAgainst($playerOne, $playerTwo)));
+    }
+}
 
-    echo sprintf(
+class Player
+{
+    public int $level;
+}
+
+$greg = new Player;
+$jade = new Player;
+
+$greg->level = 400;
+$jade->level = 800;
+
+
+echo sprintf(
         'Greg à %.2f%% chance de gagner face a Jade',
-        $encounter->probabilityAgainst($greg, $jade)*100
+        Encounter::probabilityAgainst($greg, $jade)*100
     ).PHP_EOL;
 
-    // Imaginons que greg l'emporte tout de même.
-    $encounter->setNewLevel($greg, $jade, RESULT_WINNER);
-    $encounter->setNewLevel($jade, $greg, RESULT_LOSER);
+// Imaginons que greg l'emporte tout de même.
+Encounter::setNewLevel($greg, $jade, Encounter::RESULT_WINNER); //to use a static element of a class outside that class we use ClasseName::property
+Encounter::setNewLevel($jade, $greg, Encounter::RESULT_LOSER);
 
-    echo sprintf(
-        'les niveaux des joueurs ont évolués vers %s pour Greg et %s pour Jade',
-        $greg,
-        $jade
-    );
+echo sprintf(
+    'les niveaux des joueurs ont évolués vers %s pour Greg et %s pour Jade',
+    $greg->level,
+    $jade->level
+);
 
-    exit(0);
+exit(0);
