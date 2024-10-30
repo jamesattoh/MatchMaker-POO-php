@@ -5,7 +5,7 @@ class Encounter
     public const RESULT_WINNER = 1;
     public const RESULT_LOSER = -1;
     public const RESULT_DRAW = 0;
-    public const RESULT_POSSIBILITIES = [self::RESULT_WINNER, self::RESULT_LOSER, self::RESULT_DRAW]; //to use a static element of a class in that class, we use self::
+    public const RESULT_POSSIBILITIES = [self::RESULT_WINNER, self::RESULT_LOSER, self::RESULT_DRAW]; //to use a static element of a class in that class, we use self:: As a const element is static
 
     public static function probabilityAgainst(Player $playerOne, Player $playerTwo): float
     {
