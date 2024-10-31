@@ -41,7 +41,7 @@ class Lobby
 
 abstract class AbstractPalyer
 {   
-    /** Initialiser un joueur avec un nom et un ratio (par défaut à 400). */
+    /** Initialiser un joueur avec un nom et un ratio (par défaut à 400). Dans cette classe abstraite, l'écriture de la méthode est imposée ici*/
     public function __construct(public string $name = 'anonymous', protected float $ratio = 400.0)
     {
 
@@ -106,8 +106,24 @@ class QueuingPlayer extends Player
     }
 }
 
-$greg = new Player('greg', 400);
-$jade = new Player('jade', 476);
+class BlitzPlayer extends Player
+{   
+    // cette fois il fallait commencer avec un ratio de 1200 au lieu de 400
+    public function __construct(public string $name = 'anonymous', protected float $ratio = 1200.0)
+    {
+        parent::__construct($name, $ratio); //il faut s'assurer le notre nouveau constructeru passe exactement les variables
+    }
+
+    public function updateRatioAgainst(AbstractPalyer $player, int $result): void
+    {   
+        // évolutio du ratio 4 X plus vite => 4 x 32. Ce qui donne 128
+        $this->ratio += 128 * ($result - $this->probabilityAgainst($player));
+    }
+}
+
+
+$greg = new BlitzPlayer('greg');
+$jade = new BlitzPlayer('jade');
 
 /** les deux joueurs greg et jade sont créés et ajoutés au lobby. */
 $lobby = new Lobby();
