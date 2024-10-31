@@ -1,67 +1,108 @@
 <?php
 
-class Encounter
-{   
-    public const RESULT_WINNER = 1;
-    public const RESULT_LOSER = -1;
-    public const RESULT_DRAW = 0;
-    public const RESULT_POSSIBILITIES = [self::RESULT_WINNER, self::RESULT_LOSER, self::RESULT_DRAW]; //to use a static element of a class in that class, we use self:: As a const element is static
+declare(strict_types=1);
 
-    public static function probabilityAgainst(Player $playerOne, Player $playerTwo): float
-    {
-        return 1/(1+(10 ** (($playerTwo->getLevel() - $playerOne->getLevel())/400)));
-    }
-
-    public static function setNewLevel(Player $playerOne, Player $playerTwo, int $playerOneResult): void
-    {
-        if (!in_array($playerOneResult, self::RESULT_POSSIBILITIES)) {
-            trigger_error(sprintf('Invalid result. Expected %s',implode(' or ', self::RESULT_POSSIBILITIES))); //implode gathers the array elements into a sting
-        }
-
-        $playerOne->setLevel( //we calculate the new level using the setter to modify and the getter to retrieve the level value
-            $playerOne->getLevel() + round(32 * ($playerOneResult - self::probabilityAgainst($playerOne, $playerTwo))) //round to round(arrondir) the value 
-        );
-    }
-}
-
-class Player
+//Cette classe représente la salle d'attente (lobby) où les joueurs peuvent être ajoutés et appariés pour jouer ensemble.
+class Lobby
 {
-    private int $level;
+    /** le tableau qui contient les objets QueuingPlayer (joueurs en attente) */
+    public array $queuingPlayers = [];
 
-    public function __construct(int $level) //we use a constructor to assign the level value
+    /**Elle prend un QueuingPlayer en entrée (le joueur pour lequel on cherche des adversaires).
+     détermine une plage de niveaux (minLevel et maxLevel) basée sur le ratio du joueur et sa "portée de recherche" (range).
+     et filtre les joueurs dans le lobby pour ne garder que ceux dont le niveau se trouve dans la plage définie et qui ne sont pas le 
+     joueur en lui-même. */
+    public function findOponents(QueuingPlayer $player): array
     {
-        $this->level = $level;
+        $minLevel = round($player->getRatio() / 100);
+        $maxLevel = $minLevel + $player->getRange();
+
+        return array_filter($this->queuingPlayers, static function (QueuingPlayer $potentialOponent) use ($minLevel, $maxLevel, $player) {
+            $playerLevel = round($potentialOponent->getRatio() / 100);
+
+            return $player !== $potentialOponent && ($minLevel <= $playerLevel) && ($playerLevel <= $maxLevel);
+        });
     }
 
-    public function getLevel (): int //we use a getter(accesseur) to retrieve the level value and return it
+    /**Elle convertit un objet Player en QueuingPlayer et l'ajoute au tableau queuingPlayers. */
+    public function addPlayer(Player $player): void
     {
-        return $this->level;
+        $this->queuingPlayers[] = new QueuingPlayer($player);
     }
 
-    public function setLevel($level): void //we use the setter(mutateur) to modify or update the level value
+    /**Elle accepte plusieurs joueurs (grâce à ...$players) et les ajoute tous au lobby en utilisant addPlayer. */
+    public function addPlayers(Player ...$players): void
     {
-        $this->level = $level;
+        foreach ($players as $player) {
+            $this->addPlayer($player);
+        }
     }
-
 }
 
-$greg = new Player(400); //wwe create new objects through the constructor
-$jade = new Player(800);
+/** La classe Player représente un joueur de base, avec un nom et un ratio (niveau). */
+class Player
+{   
+    /** Initialiser un joueur avec un nom et un ratio (par défaut à 400). */
+    public function __construct(protected string $name, protected float $ratio = 400.0)
+    {
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /** Calculer la probabilité de victoire du joueur actuel contre un autre joueur. */
+    private function probabilityAgainst(self $player): float
+    {
+        return 1 / (1 + (10 ** (($player->getRatio() - $this->getRatio()) / 400)));
+    }
+
+    /** Mettre à jour le ratio du joueur en fonction d'un résultat (1 pour une victoire, 0 pour une défaite) */
+    public function updateRatioAgainst(self $player, int $result): void
+    {
+        $this->ratio += 32 * ($result - $this->probabilityAgainst($player));
+    }
+
+    public function getRatio(): float
+    {
+        return $this->ratio;
+    }
+}
 
 
-echo sprintf(
-        'Greg à %.2f%% chance de gagner face a Jade',
-        Encounter::probabilityAgainst($greg, $jade)*100
-    ).PHP_EOL;
+/** QueuingPlayer est une sous-classe représentant un joueur en attente de match dans le lobby. */
+class QueuingPlayer extends Player
+{  
+    // le constructeur permettra de reprendre les données du joueur dans la nouvelle classe
+    public function __construct(Player $player, protected int $range = 1)
+    {
+        parent::__construct($player->getName(), $player->getRatio());
+    }
 
-// Imaginons que greg l'emporte tout de même.
-Encounter::setNewLevel($greg, $jade, Encounter::RESULT_WINNER); //to use a static element of a class outside that class we use ClasseName::property
-Encounter::setNewLevel($jade, $greg, Encounter::RESULT_LOSER);
+    /** Retourner la portée de recherche actuelle du joueur. */
+    public function getRange(): int
+    {
+        return $this->range;
+    }
 
-echo sprintf(
-    'les niveaux des joueurs ont évolués vers %s pour Greg et %s pour Jade',
-    $greg->getLevel(),
-    $jade->getLevel()
-);
+    /**la méthode upgradeRange permet de mettre à jour la portée de recherche 
+    avec un maximum de niveau 40 */
+    public function upgradeRange(): void  
+    {
+        $this->range = min($this->range + 1, 40);
+    }
+}
+
+$greg = new Player('greg', 400);
+$jade = new Player('jade', 476);
+
+/** les deux joueurs greg et jade sont créés et ajoutés au lobby. */
+$lobby = new Lobby();
+$lobby->addPlayers($greg, $jade);
+
+/** findOponents cherchera les adversaires potentiels pour greg (queuingPlayers[0]) dans le lobby . Le résultat de cette recherche 
+ * est affiché avec var_dump. */
+var_dump($lobby->findOponents($lobby->queuingPlayers[0]));
 
 exit(0);
