@@ -39,27 +39,39 @@ class Lobby
     }
 }
 
-/** La classe Player représente un joueur de base, avec un nom et un ratio (niveau). */
-class Player
+abstract class AbstractPalyer
 {   
     /** Initialiser un joueur avec un nom et un ratio (par défaut à 400). */
-    public function __construct(protected string $name, protected float $ratio = 400.0)
+    public function __construct(public string $name = 'anonymous', protected float $ratio = 400.0)
     {
+
     }
 
+    abstract public function getName(): string;
+
+    abstract public function getRatio(): float;
+
+    abstract protected function probabilityAgainst(AbstractPalyer $player): float;
+
+    abstract public function updateRatioAgainst(AbstractPalyer $player, int $result): void;
+}
+
+/** La classe Player représente un joueur de base, avec un nom et un ratio (niveau). */
+class Player extends AbstractPalyer
+{   
     public function getName(): string
     {
         return $this->name;
     }
 
     /** Calculer la probabilité de victoire du joueur actuel contre un autre joueur. */
-    private function probabilityAgainst(self $player): float
+    protected function probabilityAgainst(AbstractPalyer $player): float
     {
         return 1 / (1 + (10 ** (($player->getRatio() - $this->getRatio()) / 400)));
     }
 
     /** Mettre à jour le ratio du joueur en fonction d'un résultat (1 pour une victoire, 0 pour une défaite) */
-    public function updateRatioAgainst(self $player, int $result): void
+    public function updateRatioAgainst(AbstractPalyer $player, int $result): void
     {
         $this->ratio += 32 * ($result - $this->probabilityAgainst($player));
     }
