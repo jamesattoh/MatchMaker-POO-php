@@ -2,11 +2,11 @@
 
     declare(strict_types=1);
 
-    spl_autoload_register(static function(string $fqcn)
+    spl_autoload_register(static function(string $fqcn): void
     {
         //remplaçons App par src et les \ par des /
         $path = sprintf('%s.php', str_replace(['App', '\\'], ['src', '/'], $fqcn));
-        require_once($path);
+        require_once $path;
     }
     );
 

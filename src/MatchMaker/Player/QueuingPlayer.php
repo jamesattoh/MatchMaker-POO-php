@@ -4,10 +4,10 @@
     namespace App\MatchMaker\Player;
 
     /** QueuingPlayer est une sous-classe représentant un joueur en attente de match dans le lobby. */
-    class QueuingPlayer extends Player
+    class QueuingPlayer extends Player implements InLobbyPlayerInterface
     {  
         // le constructeur permettra de reprendre les données du joueur dans la nouvelle classe
-        public function __construct(Player $player, protected int $range = 1)
+        public function __construct(PlayerInterface $player, protected int $range = 1)
         {
             parent::__construct($player->getName(), $player->getRatio());
         }
