@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+namespace App\MatchMaker {
+    use App\MatchMaker\Player\QueuingPlayer;
+    use App\MatchMaker\Player\Player;
+
 //Cette classe représente la salle d'attente (lobby) où les joueurs peuvent être ajoutés et appariés pour jouer ensemble.
 class Lobby
 {
@@ -39,7 +43,11 @@ class Lobby
     }
 }
 
-abstract class AbstractPalyer
+}
+
+namespace App\MatchMaker\Player{
+
+    abstract class AbstractPalyer
 {   
     /** Initialiser un joueur avec un nom et un ratio (par défaut à 400). Dans cette classe abstraite, l'écriture de la méthode est imposée ici*/
     public function __construct(public string $name = 'anonymous', protected float $ratio = 400.0)
@@ -120,17 +128,24 @@ class BlitzPlayer extends Player
         $this->ratio += 128 * ($result - $this->probabilityAgainst($player));
     }
 }
+}
 
 
-$greg = new BlitzPlayer('greg');
-$jade = new BlitzPlayer('jade');
+namespace {
 
-/** les deux joueurs greg et jade sont créés et ajoutés au lobby. */
-$lobby = new Lobby();
-$lobby->addPlayers($greg, $jade);
+    use App\MatchMaker\Player\Player;
+    use App\MatchMaker\Lobby;
 
-/** findOponents cherchera les adversaires potentiels pour greg (queuingPlayers[0]) dans le lobby . Le résultat de cette recherche 
- * est affiché avec var_dump. */
-var_dump($lobby->findOponents($lobby->queuingPlayers[0]));
+    $greg = new Player('greg');
+    $jade = new Player('jade');
 
-exit(0);
+    /** les deux joueurs greg et jade sont créés et ajoutés au lobby. */
+    $lobby = new Lobby();
+    $lobby->addPlayers($greg, $jade);
+
+    /** findOponents cherchera les adversaires potentiels pour greg (queuingPlayers[0]) dans le lobby . Le résultat de cette recherche 
+     * est affiché avec var_dump. */
+    var_dump($lobby->findOponents($lobby->queuingPlayers[0]));
+
+    exit(0);
+}
