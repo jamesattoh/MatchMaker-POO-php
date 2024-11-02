@@ -1,9 +1,7 @@
-<?php 
-declare(strict_types = 1);
+<?php
 
-namespace App\MatchMaker\Player;
+declare(strict_types=1);
 
-interface InLobbyPlayerInterface extends PlayerInterface, QueuingInterface
-{
+namespace App\Domain\Matchmaker\Player;
 
-}
+interface InLobbyPlayerInterface extends PlayerInterface, QueuingInterface {}

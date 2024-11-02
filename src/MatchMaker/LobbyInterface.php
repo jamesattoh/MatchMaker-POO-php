@@ -1,13 +1,12 @@
-<?php 
+<?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
-namespace App\MatchMaker;
+namespace App\Domain\Matchmaker;
 
-use App\MatchMaker\Player\PlayerInterface;
+use App\Domain\Matchmaker\Player\PlayerInterface;
 
 interface LobbyInterface
 {
-    public function addPlayer(PlayerInterface $player):void;
-    
+    public function addPlayer(PlayerInterface $player): void;
 }
